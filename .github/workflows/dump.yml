@@ -1,0 +1,28 @@
+name: Dump Supabase
+
+on:
+  workflow_dispatch:
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install pg_dump
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Dump database
+        env:
+          PGPASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          pg_dump --clean --if-exists \
+            --quote-all-identifiers \
+            --no-owner --no-privileges \
+            --schema=kubi --schema=sahut \
+            "postgresql://postgres.edxwafkjordqqfqpptwv:$PGPASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require" \
+            -f dump.sql
+
+      - name: Upload dump
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-dump
+          path: dump.sql
