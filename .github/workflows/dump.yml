@@ -18,7 +18,7 @@ jobs:
             --quote-all-identifiers \
             --no-owner --no-privileges \
             --schema=kubi --schema=sahut \
-            -h aws-0-ap-southeast-1.pooler.supabase.com \
+            -h aws-1-ap-southeast-1.pooler.supabase.com \
             -p 5432 \
             -U postgres.edxwafkjordqqfqpptwv \
             -d postgres \
