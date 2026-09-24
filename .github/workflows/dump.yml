@@ -10,14 +10,6 @@ jobs:
       - name: Install pg_dump
         run: sudo apt-get install -y postgresql-client
 
-      - name: Get IPv4
-        run: |
-          IP=$(dig +short A db.edxwafkjordqqfqpptwv.supabase.co | tail -1)
-          echo "DB_IP=$IP" >> $GITHUB_ENV
-
-      - name: Check IP
-        run: echo ${{ env.DB_IP }}
-
       - name: Dump database
         env:
           PGPASSWORD: ${{ secrets.DB_PASSWORD }}
