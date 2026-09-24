@@ -1,10 +1,10 @@
-name: Dump Supabase
+name: Restore Supabase
 
 on:
   workflow_dispatch:
 
 jobs:
-  dump:
+  restore:
     runs-on: ubuntu-latest
     steps:
       - name: Install PostgreSQL 17 client
@@ -15,22 +15,30 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client-17
 
-      - name: Dump database
+      - name: Download dump artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: supabase-dump
+
+      - name: Restore database
         env:
           PGPASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          pg_dump --clean --if-exists \
-            --quote-all-identifiers \
-            --no-owner --no-privileges \
-            --schema=kubi --schema=sahut \
-            -h aws-1-ap-southeast-1.pooler.supabase.com \
+          psql \
+            -h aws-0-eu-central-1.pooler.supabase.com \
             -p 5432 \
-            -U postgres.edxwafkjordqqfqpptwv \
+            -U postgres.wmmmimtknjosauiaofvf \
             -d postgres \
             -f dump.sql
 
-      - name: Upload dump
-        uses: actions/upload-artifact@v4
-        with:
-          name: supabase-dump
-          path: dump.sql
+      - name: Reset sequences
+        env:
+          PGPASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          psql \
+            -h aws-0-eu-central-1.pooler.supabase.com \
+            -p 5432 \
+            -U postgres.wmmmimtknjosauiaofvf \
+            -d postgres \
+            -c "SELECT setval('sahut.knowledge_base_id_seq', 62);"
+            -c "SELECT setval('sahut.memory_longterm_id_seq', 3);"
