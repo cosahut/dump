@@ -1,10 +1,10 @@
-name: Restore Supabase
+name: Dump and Restore Supabase
 
 on:
   workflow_dispatch:
 
 jobs:
-  restore:
+  migrate:
     runs-on: ubuntu-latest
     steps:
       - name: Install PostgreSQL 17 client
@@ -15,12 +15,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client-17
 
-      - name: Download dump artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: supabase-dump
+      - name: Dump from old project (Singapore)
+        env:
+          PGPASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          pg_dump --clean --if-exists \
+            --quote-all-identifiers \
+            --no-owner --no-privileges \
+            --schema=kubi --schema=sahut \
+            -h aws-1-ap-southeast-1.pooler.supabase.com \
+            -p 5432 \
+            -U postgres.edxwafkjordqqfqpptwv \
+            -d postgres \
+            -f dump.sql
 
-      - name: Restore database
+      - name: Restore to new project (Frankfurt)
         env:
           PGPASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
@@ -41,4 +50,15 @@ jobs:
             -U postgres.wmmmimtknjosauiaofvf \
             -d postgres \
             -c "SELECT setval('sahut.knowledge_base_id_seq', 62);"
+          psql \
+            -h aws-0-eu-central-1.pooler.supabase.com \
+            -p 5432 \
+            -U postgres.wmmmimtknjosauiaofvf \
+            -d postgres \
             -c "SELECT setval('sahut.memory_longterm_id_seq', 3);"
+
+      - name: Upload dump as backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-dump
+          path: dump.sql
