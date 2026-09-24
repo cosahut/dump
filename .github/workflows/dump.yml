@@ -8,13 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install tools
-        run: sudo apt-get install -y postgresql-client dnsutils
-
-      - name: Force IPv4 for Supabase
-        run: |
-          IP=$(dig +short A db.edxwafkjordqqfqpptwv.supabase.co @8.8.8.8 | grep -E '^[0-9]+\.' | head -1)
-          echo "Resolved IP: $IP"
-          echo "$IP db.edxwafkjordqqfqpptwv.supabase.co" | sudo tee -a /etc/hosts
+        run: sudo apt-get install -y postgresql-client
 
       - name: Dump database
         env:
@@ -24,8 +18,10 @@ jobs:
             --quote-all-identifiers \
             --no-owner --no-privileges \
             --schema=kubi --schema=sahut \
-            -h db.edxwafkjordqqfqpptwv.supabase.co \
-            -p 5432 -U postgres -d postgres \
+            -h aws-0-ap-southeast-1.pooler.supabase.com \
+            -p 5432 \
+            -U postgres.edxwafkjordqqfqpptwv \
+            -d postgres \
             -f dump.sql
 
       - name: Upload dump
