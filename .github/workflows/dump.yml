@@ -7,8 +7,14 @@ jobs:
   dump:
     runs-on: ubuntu-latest
     steps:
-      - name: Install pg_dump
-        run: sudo apt-get install -y postgresql-client
+      - name: Install tools
+        run: sudo apt-get install -y postgresql-client dnsutils
+
+      - name: Force IPv4 for Supabase
+        run: |
+          IP=$(dig +short A db.edxwafkjordqqfqpptwv.supabase.co @8.8.8.8 | grep -E '^[0-9]+\.' | head -1)
+          echo "Resolved IP: $IP"
+          echo "$IP db.edxwafkjordqqfqpptwv.supabase.co" | sudo tee -a /etc/hosts
 
       - name: Dump database
         env:
